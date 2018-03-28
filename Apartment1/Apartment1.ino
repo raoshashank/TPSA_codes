@@ -26,6 +26,34 @@ const int LED_3 = 3;
 
 const int buzzer = 8;
 
+//TODO: Garbage disposal:Servo mechanism to
+//TODO: Use these functions instead of placing code in each if case
+void ring_alarm(int time_to_ring=0,boolean stop_after=false)
+{
+  digitalWrite(buzzer,HIGH);
+  if(stop_after)
+  {
+    delay(time_to_ring)  
+    stop_alarm();
+   } 
+}
+
+void stop_alarm()
+{
+  digitalWrite(buzzer,LOW);  
+}
+
+//true = HIGH, false = LOW
+void gate_actuate(boolean dir)
+{
+  analogWrite(motor_gate_enable, 100);
+  if(dir == true)    
+    digitalWrite(motor_gate_direction, HIGH);
+  else  digitalWrite(motor_gate_direction, LOW);  
+}
+
+//TODO
+
 void setup()
 {
 
@@ -59,10 +87,6 @@ void setup()
 
 }
 
-
-
-
-
 int count = 0;
 
 void loop()
@@ -73,34 +97,42 @@ void loop()
   int Smoke_Detector = analogRead(smoke_detector);
   int Ir = analogRead(IR);
   int Lm = (analogRead(LM35) * 500) / 1024;
+  
   digitalWrite(laser, HIGH);
+
+
+  /*------------------Burglar Alarm--------------------------------*/
   if (LDR_Wall < 100)
-  { digitalWrite(buzzer, HIGH);
+  { 
+    digitalWrite(buzzer, HIGH);
   }
   else
     digitalWrite(buzzer, LOW);
-
+  /*--------------------------------------------------*/
+  
+    
+  /*---------------Gate closing and Opening when IR is blocked--------*/
+  //count= becomes zero to reset IR sensing
   if (Ir < 100 && count == 0)
   {
-    analogWrite(motor_gate_enable, 100);
-
-    digitalWrite(motor_gate_direction, HIGH);
+    //USE motor function here.
+    gate_actuate(true);
     delay(3000);
     analogWrite(motor_gate_enable, 0);
     delay(1500);
-    digitalWrite(motor_gate_direction, LOW);
-    analogWrite(motor_gate_enable, 100);
+    gate_actuate(false);
     delay(3000);
     analogWrite(motor_gate_enable, 0);
-
     count++;
   }
+  
   else if (Ir > 100)
   {
     analogWrite(motor_gate_enable, 0);
     count = 0;
   }
-
+  /*--------------------------------------------------*/
+  /*-----------LM35---------------------------------------*/
   if (Lm > 30)
   {
     analogWrite(motor_fan_enable, 50);
@@ -108,12 +140,43 @@ void loop()
   }
   else
     analogWrite(motor_fan_enable, 0);
+  /*--------------------------------------------------*/
+
+  /*-----------------LDR for smart lighting---------------------------------*/
+  if (LDR_wall<15)
+   {
+    digitalWrite(LED_1,HIGH);
+    digitalWrite(LED_2,HIGH);
+    digitalWrite(LED_3,HIGH);
+   }
+  else{
+    digitalWrite(LED_1,LOW);
+    digitalWrite(LED_2,LOW);
+    digitalWrite(LED_3,LOW);
+  }
+  /*--------------------------------------------------*/
+
+  /*------------SMOKE DETECTOR--------------------------------------*/
+  //TODO: Calibrate the smoke sensor threshold value
+  smoke_threshold=0;
+  if (Smoke_detector > smoke_threshold)
+  {
+    //SEND EMERGENCY REQUEST TO RPI
+    ring_alarm(1000,true);
+    open_gate();    
+  }
+  /*--------------------------------------------------*/  
+  
+
+    
+  //ALL  OUTPUTS
+  /*--------------------------------------------------*/
   Serial.println("LDR top = " + String(LDR_Top));
   Serial.println("LDR Wall = " + String(LDR_Wall));
   Serial.println("Smoke = " + String(Smoke_Detector));
   Serial.println("IR = " + String(Ir));
   Serial.println("LM35 = " + String(abs(Lm)));
-
+  /*--------------------------------------------------*/
   delay(3000);
 
 }

@@ -9,7 +9,7 @@ int digitalValue;
 void setup()
 {
   Serial.begin(9600);      // sets the serial port to 9600
-  pinMode( 0, INPUT);
+  pinMode(A2, INPUT);
 }
 void loop()
 {
