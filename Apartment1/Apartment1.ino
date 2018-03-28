@@ -33,7 +33,7 @@ void ring_alarm(int time_to_ring=0,boolean stop_after=false)
   digitalWrite(buzzer,HIGH);
   if(stop_after)
   {
-    delay(time_to_ring)  
+    delay(time_to_ring); 
     stop_alarm();
    } 
 }
@@ -158,12 +158,12 @@ void loop()
 
   /*------------SMOKE DETECTOR--------------------------------------*/
   //TODO: Calibrate the smoke sensor threshold value
-  smoke_threshold=0;
-  if (Smoke_detector > smoke_threshold)
+  int smoke_threshold=0;
+  if (Smoke_Detector > smoke_threshold)
   {
     //SEND EMERGENCY REQUEST TO RPI
     ring_alarm(1000,true);
-    open_gate();    
+    gate_actuate(true);    
   }
   /*--------------------------------------------------*/  
   
