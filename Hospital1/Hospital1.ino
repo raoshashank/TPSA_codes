@@ -1,143 +1,108 @@
-const int LDR_CONV= A0;
-const int LDR_Wall =A1;
-const int IR = A2;
-const int Smoke_detector = A3;
-const int Lm =A4;
-const int PIR ;
-const int motor_conveyor_en;
-const int motor_conveyor_dir;
-
-const int motor_gate_en;
-const int motor_gate_dir;
-
-const int motor_fan_en;
-const int motor_fan_dir;
-
-const int LED;
-const int LED_CONV;
-const int call_ambulance;
-//const int call_mall;
-const int call_emergency;
-
-void setup()
-{
-  pinMode(LDR_CONV,INPUT);
-  pinMode(LDR_Wall,INPUT);
-  pinMode(Lm,INPUT);
-  pinMode(IR,INPUT);
-  pinMode(Smoke_detector,INPUT);
-  pinMode(PIR,INPUT);
- 
-  pinMode(motor_conveyor_en,OUTPUT);
-  pinMode(motor_conveyor_dir,OUTPUT);
-  
-  pinMode(motor_gate_en,OUTPUT);
-  pinMode(motor_gate_dir,OUTPUT);
-  
-  pinMode(motor_fan_en,OUTPUT);
-  pinMode(motor_fan_dir,OUTPUT);
-  
-  pinMode(LED,OUTPUT);
-  
-  pinMode(call_ambulance,INPUT);
-  pinMode(call_emergency,INPUT);
-  //pinMode(call_mall,INPUT);
-
- Serial.begin(9600);
-}
-
-/*+----------SUMMON CODE--------*/
-void summon_ambulance()
-{
-  
-}
-void summon_mall()
-{
-  
-}
-void summon_emergency()
-{
-  
-}
-
-//true = HIGH, false = LOW
-void gate_actuate(boolean dir)
-{
-  analogWrite(motor_gate_en, 100);
-  if(dir == true)    
-    digitalWrite(motor_gate_dir, HIGH);
-  else  digitalWrite(motor_gate_dir, LOW);  
-}
-/*-----------------------------*/
-
+int ldr_conv, ldr_wall, ir;
+int Lm35,Smoke_detector; 
 int count = 0;
-int smoke_threshold;
-int LDR_CONV_threshold;
+int gc = 0;
+const int temp_fan=8;
+int led;
+int buzz=9;
+const int conv_motor_speed = 10;
+const int conv_motot_dir = 12;
+const int gate_speed = 13;
+const int gate_dir = 11;
+void setup() {
+  pinMode(A0, INPUT);
+  pinMode(A1, INPUT);
+  pinMode(A2, INPUT);
+  pinMode(A3, INPUT);
+  pinMode(A4, INPUT);
+  pinMode(10, OUTPUT);
+  pinMode(12, OUTPUT);
+  pinMode(13, OUTPUT);
+  pinMode(11, OUTPUT);
+  pinMode(9,OUTPUT);
+  pinMode(8,OUTPUT);
+  Serial.begin(9600);
 
-void loop()
-{
-  int LDR_CONV = analogRead(LDR_CONV);
-  int LDR_Wall = analogRead(LDR_Wall);
-  int Smoke_detector = analogRead(Smoke_detector);
-  int IR = analogRead(IR);
-  int Lm = (analogRead(Lm) * 500) / 1024;
 
-  digitalWrite(LED_CONV,HIGH);
-  /*------CONVEYOR BASED ON LDR----*/
-  if(LDR_CONV<LDR_CONV_threshold)
+
+  // put your setup code here, to run once:
+
+}
+
+void loop() {
+  ldr_conv = 1023 - analogRead(A0);
+  ldr_wall = analogRead(A1);
+  ir = 1023 - analogRead(A2);
+  Lm35 = (analogRead(A3)*500)/1023;
+  Smoke_detector = analogRead(A4);
+  Serial.println("Lm35 =" + String(Lm35));
+  Serial.println("ldr_conv=" + String(ldr_conv));
+  Serial.println("ldr wall=" + String(ldr_wall));
+  Serial.println("ir=" + String(ir));
+  Serial.println("Smoke = " + String(Smoke_detector));
+
+  delay(1000);
+  /*___________________conv_moto____________*/
+  if (ldr_conv < 250 && count == 0)
   {
-   digitalWrite(motor_conveyor_en,100);
-   digitalWrite(motor_conveyor_dir,HIGH);
-   delay(5000); 
-  }
-  /*------------------------------*/
-
-  
-  /*---------------Gate closing and Opening when IR is blocked--------*/
-  //count= becomes zero to reset IR sensing
-  if (IR < 100 && count == 0)
-  {
-    //USE motor function here.
-    gate_actuate(true);
-    delay(3000);
-    analogWrite(motor_gate_en, 0);
-    delay(1500);
-    gate_actuate(false);
-    delay(3000);
-    analogWrite(motor_gate_en, 0);
+    analogWrite(conv_motor_speed, 255);
+    delay(1000);
+    analogWrite(conv_motor_speed, 0);
     count++;
   }
-  
-  else if (IR > 100)
+  else if(ldr_conv>250)
   {
-    analogWrite(motor_gate_en, 0);
     count = 0;
   }
-  /*--------------------------------------------------*/
-  
-  
-  /*-----------LM35-fan---------------------------------------*/
-  if (Lm > 30)
-  {
-    analogWrite(motor_fan_en, 50);
-    digitalWrite(motor_fan_dir, HIGH);
+ /* ____________________________________________*/
+
+
+  /*________________ldr__________________*/
+  if (ldr_wall < 100)
+   { digitalWrite(led, HIGH);
+    delay(1000);
   }
-  else
-    analogWrite(motor_fan_en, 0);
-  /*--------------------------------------------------*/
-  /*------------SMOKE DETECTOR--------------------------------------*/
-  //TODO: Calibrate the smoke sensor threshold value
-  smoke_threshold=0;
-  if (Smoke_detector > smoke_threshold)
-  {
-    //SEND EMERGENCY REQUEST TO RPI
-    gate_actuate(true);  
-  }
-  /*--------------------------------------------------*/  
-  
-  
-  /*call_ambulance ,mall,emergency here*/
- 
+
+
+  /*_____________________gate______________*/
+  if(ir<400 && gc==0)
+{analogWrite(gate_speed, 255);
+    digitalWrite(gate_dir,HIGH);
+    delay(3000);
+    Serial.println("close");
+    analogWrite(gate_speed, 0);
+    delay(3000);
+    digitalWrite(gate_dir,LOW);
+    analogWrite(gate_speed, 255);
+    Serial.println("open");
+    delay(3000);
+
+
 }
 
+  else if(ir>400)
+    gc = 0;
+/*________________________________________________*/
 
+
+  
+/*_____________________________lm35_______________*/
+    
+    if (Lm35>28)
+    {
+      digitalWrite(temp_fan,HIGH);
+    }
+    else if(Lm35>30)
+    {
+      digitalWrite(temp_fan,HIGH);
+      digitalWrite(buzz,HIGH);
+    }
+    else
+    {
+      digitalWrite(temp_fan,LOW);
+      digitalWrite(buzz,LOW);
+    }
+    
+}
+  /*_____________________________*/
+  
