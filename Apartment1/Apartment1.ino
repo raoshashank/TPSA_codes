@@ -4,6 +4,8 @@ const int LDR_wall = A1;
 const int smoke_detector = A2;
 const int IR = A3;
 const int LM35 = A4;
+// Comment
+
 const int sensor_A5 = A5;
 
 const int motor_gate_enable = 10;
