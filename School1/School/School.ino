@@ -14,12 +14,7 @@ void setup() {
   pinMode(12, OUTPUT);
   myservo.attach(10);
   pinMode(11, OUTPUT);
-
   Serial.begin(9600);
-
-
-
-  // put your setup code here, to run once:
 
 }
 
@@ -43,6 +38,10 @@ void loop() {
       delay(15);                       // waits 15ms for the servo to reach the position
     }
   }
+  /*_________________________________*/
+  // HIGH = Buzzer on , LOW = Buzzer off
+  //TODO : Smoke sensor integration
+
   /*______________buzzer_______________*/
   int  temp = analogRead(lm35)*500/1023;
   Serial.println("Temp "+String(temp));
@@ -54,6 +53,7 @@ void loop() {
   {
     digitalWrite(11, LOW);
   }
+  /*________Smoke sensor____________*/
   int  smoke_sensor = analogRead(A1);
   Serial.println("Smoke "+String(smoke_sensor));
   if (smoke_sensor > 2000)
@@ -62,6 +62,8 @@ void loop() {
     Serial.println("Emergency");
     delay(10000);
   }
+  /*___________*/
+  /*______clock_________*/
   count += 10;
   if (count % 1000000 == 0)
   {
@@ -69,6 +71,8 @@ void loop() {
     delay(1000);
     digitalWrite(13, LOW);
   }
+  /*_________________*/
+  /*_____Burglar alarm_____________*/
   ldr = 1023 - analogRead(A0);
   Serial.println("ldr "+String(ldr));
   if ( ldr < 100)
@@ -77,4 +81,5 @@ void loop() {
     delay(5000);
     digitalWrite(13,LOW);
   }
+  /*______________*/
 }
