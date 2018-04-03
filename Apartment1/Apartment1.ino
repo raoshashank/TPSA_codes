@@ -234,8 +234,8 @@ void loop()
   //sendData();    
   //ALL  OUTPUTS
   /*--------------------------------------------------*/
-  Serial.println("LDR top = " + String(LDR_Top));
-  Serial.println("LDR Wall = " + String(LDR_Wall));
+  Serial.println("LDR top = " + String(LDR_top));
+  Serial.println("LDR Wall = " + String(LDR_wall));
   Serial.println("Smoke = " + String(Smoke_Detector));
   Serial.println("IR = " + String(Ir));
   Serial.println("LM35 = " + String(abs(Lm)));
