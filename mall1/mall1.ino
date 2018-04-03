@@ -1,10 +1,12 @@
 #include<Servo.h>
-int ldr =A0, ir_sensor=A1;
-int count = 0;
-int lm35 = A4;
-int ir,ldr_wall;
+int ir_sensor = 12;
 int pos = 0;
-int servo = 10;
+int ir_enable = 500;
+int lm35 = 11;
+int temp_max = 28;
+int smk = A1;
+int smoke_max = 200;
+int burg = 100;
 Servo myservo;
 void setup() {
   pinMode(A0, INPUT);
@@ -19,11 +21,11 @@ void setup() {
 }
 
 void loop() {
-  
-    /*________________gate____________*/
-  ir = analogRead(ir_sensor);
-  Serial.println("ir "+String(ir));
-  if (ir > 500)
+
+  /*________________delivery mechanism____________*/
+  int ir = analogRead(ir_sensor);
+  Serial.println("ir " + String(ir));
+  if (ir > ir_enable)
   {
     for (pos = 0; pos <= 180; pos += 1) { // goes from 0 degrees to 180 degrees
       // in steps of 1 degree
@@ -31,7 +33,7 @@ void loop() {
       delay(15);                       // waits 15ms for the servo to reach the position
     }
   }
-  if (ir < 500)
+  if (ir < ir_enable)
   {
     for (pos = 180; pos >= 0; pos -= 1) { // goes from 180 degrees to 0 degrees
       myservo.write(pos);              // tell servo to go to position in variable 'pos'
@@ -43,9 +45,9 @@ void loop() {
   //TODO : Smoke sensor integration
 
   /*______________buzzer_______________*/
-  int  temp = analogRead(lm35)*500/1023;
-  Serial.println("Temp "+String(temp));
-  if (temp > 28)
+  int  temp = analogRead(lm35) * 500 / 1023;
+  Serial.println("Temp " + String(temp));
+  if (temp > temp_max)
   {
     digitalWrite(11, HIGH);
   }
@@ -54,32 +56,23 @@ void loop() {
     digitalWrite(11, LOW);
   }
   /*________Smoke sensor____________*/
-  int  smoke_sensor = analogRead(A1);
-  Serial.println("Smoke "+String(smoke_sensor));
-  if (smoke_sensor > 2000)
+  int  smoke_sensor = analogRead(smk);
+  Serial.println("Smoke " + String(smoke_sensor));
+  if (smoke_sensor > smoke_max)
   {
     digitalWrite(13 , HIGH);
     Serial.println("Emergency");
     delay(10000);
   }
   /*___________*/
-  /*______clock_________*/
-  count += 10;
-  if (count % 1000000 == 0)
-  {
-    digitalWrite(13, HIGH);
-    delay(1000);
-    digitalWrite(13, LOW);
-  }
-  /*_________________*/
   /*_____Burglar alarm_____________*/
-  ldr = 1023 - analogRead(A0);
-  Serial.println("ldr "+String(ldr));
-  if ( ldr < 100)
+  int ldr = 1023 - analogRead(burg);
+  Serial.println("ldr " + String(ldr));
+  if ( ldr < burg)
   {
     digitalWrite(13, HIGH);
     delay(5000);
-    digitalWrite(13,LOW);
+    digitalWrite(13, LOW);
   }
   /*______________*/
 }
