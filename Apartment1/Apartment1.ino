@@ -26,7 +26,7 @@ const int LED_2 = 1;
 const int LED_3 = 3;
 
 const int buzzer = 8;
-int GBG,EMG,SHP,KCK,Lm,BURGLER;
+int GBG, EMG, SHP, KCK, Lm, BURGLER;
 
 String data_recieved_from_pi = "";
 
@@ -37,30 +37,30 @@ String data_recieved_from_pi = "";
 
 
 /*-----------------------------------------------------------*/
-void receiveData(int byteCount) 
+void receiveData(int byteCount)
 {
-            while( Wire.available()) {
-                data_recieved_from_pi += (char)Wire.read();
-            }
+  while ( Wire.available()) {
+    data_recieved_from_pi += (char)Wire.read();
+  }
 
-           // Serial.print("Data Received From PI:");
-            Serial.println(data_recieved_from_pi);
+  // Serial.print("Data Received From PI:");
+  Serial.println(data_recieved_from_pi);
 
-            data_recieved_from_pi = "";
+  data_recieved_from_pi = "";
 }
 
 void sendData()
 {
-  String data="@@04|";
-  data+=EMG;
-  data+=SHP;
-  data+=GBG;
-  data+=BURGLER;
-  data+=KCK;
-  data+="000";
-  data+="|";
-  data+=Lm;
-  data+="&";
+  String data = "@@04|";
+  data += EMG;
+  data += SHP;
+  data += GBG;
+  data += BURGLER;
+  data += KCK;
+  data += "000";
+  data += "|";
+  data += Lm;
+  data += "&";
   Serial.println("----------");
   Serial.println(data);
   Wire.write(data.c_str());
@@ -73,28 +73,28 @@ void sendData()
 
 //TODO: Garbage disposal:Servo mechanism to
 //TODO: Use these functions instead of placing code in each if case
-void ring_alarm(int time_to_ring=0,boolean stop_after=false)
+void ring_alarm(int time_to_ring = 0, boolean stop_after = false)
 {
-  digitalWrite(buzzer,HIGH);
-  if(stop_after)
+  digitalWrite(buzzer, HIGH);
+  if (stop_after)
   {
-    delay(time_to_ring); 
+    delay(time_to_ring);
     stop_alarm();
-   } 
+  }
 }
 
 void stop_alarm()
 {
-  digitalWrite(buzzer,LOW);  
+  digitalWrite(buzzer, LOW);
 }
 
 //true = HIGH, false = LOW
 void gate_actuate(bool dir)
 {
   analogWrite(motor_gate_enable, 100);
-  if(dir == true)    
+  if (dir == true)
     digitalWrite(motor_gate_direction, HIGH);
-  else  digitalWrite(motor_gate_direction, LOW);  
+  else  digitalWrite(motor_gate_direction, LOW);
 }
 
 //TODO
@@ -143,8 +143,8 @@ void loop()
   int Ir = analogRead(IR);
   Lm = (analogRead(LM35) * 500) / 1023;
   GBG = digitalRead(push_GBG);
-  SHP=digitalRead(push_SHP);
-  EMG=digitalRead(push_EMG);
+  SHP = digitalRead(push_SHP);
+  EMG = digitalRead(push_EMG);
 
   // initialize i2c as slave
   Wire.begin(SLAVE_ADDRESS);
@@ -153,30 +153,48 @@ void loop()
   Wire.onRequest(sendData);
   Serial.println("Ready!");
   digitalWrite(laser, HIGH);
+  /*________Emergency_________*/
+  if (data_recieved_from_pi[0] == 1)
+  {
+    EMG = 0;
+  }
 
+  /*______________________*/
+  /*-----------PARCEL ARRIVAL----------*/
+  if (data_recieved_from_pi[0] == 1)
+  {
+    SHP = 0;
+  }
+  /*--------------------------------*/
 
+  /*-----------GARBAGE DISPOSAL----------*/
+  if (data_recieved_from_pi[0] == 1)
+  {
+    GBG = 0;
+  }
+  /*--------------------------------*/
   /*------------------Burglar Alarm--------------------------------*/
   if (LDR_Wall < 500)
-  { 
+  {
     digitalWrite(buzzer, HIGH);
-    BURGLER=1;
+    BURGLER = 1;
   }
-  else{
+  else {
     digitalWrite(buzzer, LOW);
-    BURGLER=0;
-  } 
+    BURGLER = 0;
+  }
 
-    
+
   /*--------------------------------------------------*/
-  
-    
+
+
   /*---------------Gate closing and Opening when IR is blocked--------*/
   //count= becomes zero to reset IR sensing
   if (Ir < 100 && count == 0)
   {
     Serial.println("gate working");
     //USE motor function here.
-    KCK=true;
+    KCK = true;
     //gate_actuate(true);
     analogWrite(motor_gate_enable, 100);
     digitalWrite(motor_gate_direction, HIGH);
@@ -188,7 +206,7 @@ void loop()
     analogWrite(motor_gate_enable, 0);
     count++;
   }
-  
+
   else if (Ir > 100)
   {
     analogWrite(motor_gate_enable, 0);
@@ -206,32 +224,33 @@ void loop()
   /*--------------------------------------------------*/
 
   /*-----------------LDR for smart lighting---------------------------------*/
-  if (LDR_wall<300)
-   {
-    digitalWrite(LED_1,HIGH);
-    digitalWrite(LED_2,HIGH);
-    digitalWrite(LED_3,HIGH);
-   }
-  else{
-    digitalWrite(LED_1,LOW);
-    digitalWrite(LED_2,LOW);
-    digitalWrite(LED_3,LOW);
+  if (LDR_wall < 300)
+  {
+    digitalWrite(LED_1, HIGH);
+    digitalWrite(LED_2, HIGH);
+    digitalWrite(LED_3, HIGH);
+  }
+  else {
+    digitalWrite(LED_1, LOW);
+    digitalWrite(LED_2, LOW);
+    digitalWrite(LED_3, LOW);
   }
   /*--------------------------------------------------*/
 
   /*------------SMOKE DETECTOR--------------------------------------*/
   //TODO: Calibrate the smoke sensor threshold value
-  int smoke_threshold=0;
+  int smoke_threshold = 0;
   if (Smoke_Detector > smoke_threshold)
   {
     //SEND EMERGENCY REQUEST TO RPI
-    ring_alarm(1000,true);
-    gate_actuate(true);    
+    ring_alarm(1000, true);
+    gate_actuate(true);
+    EMG = 1;
   }
-  /*--------------------------------------------------*/  
-  
+  /*--------------------------------------------------*/
 
-  //sendData();    
+
+  //sendData();
   //ALL  OUTPUTS
   /*--------------------------------------------------*/
   Serial.println("LDR top = " + String(LDR_top));
@@ -239,11 +258,11 @@ void loop()
   Serial.println("Smoke = " + String(Smoke_Detector));
   Serial.println("IR = " + String(Ir));
   Serial.println("LM35 = " + String(abs(Lm)));
-  Serial.println("GBG ="+String(GBG));
-  Serial.println("SHP="+String(SHP));
-  Serial.println("EMG="+String(EMG));
+  Serial.println("GBG =" + String(GBG));
+  Serial.println("SHP=" + String(SHP));
+  Serial.println("EMG=" + String(EMG));
   Serial.println("---------------------------");
-  /*--------------------------------------------------*/ 
+  /*--------------------------------------------------*/
   delay(10);
 
 
