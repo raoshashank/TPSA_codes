@@ -29,17 +29,6 @@ int gc = 0;
 
 
 /*-----------------------------------------------------------*/
-void receiveData(int byteCount)
-{
-  while ( Wire.available()) {
-    data_recieved_from_pi += (char)Wire.read();
-  }
-
-  // Serial.print("Data Received From PI:");
-  Serial.println(data_recieved_from_pi);
-
-  data_recieved_from_pi = "";
-}
 
 void sendData()
 {
