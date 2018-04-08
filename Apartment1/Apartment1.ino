@@ -141,7 +141,7 @@ void loop()
   int LDR_Wall = analogRead(LDR_wall);
   int Smoke_Detector = analogRead(smoke_detector);
   int Ir = analogRead(IR);
-  Lm = (analogRead(LM35) * 500) / 1023;
+  Lm = abs((analogRead(LM35) * 500) / 1023);
   GBG = digitalRead(push_GBG);
   SHP = digitalRead(push_SHP);
   EMG = digitalRead(push_EMG);
