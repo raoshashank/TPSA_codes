@@ -37,7 +37,7 @@ String data_recieved_from_pi = "";
 
 
 /*-----------------------------------------------------------*/
-void receiveData(int byteCount)
+void receiveData()
 {
   while ( Wire.available()) {
     data_recieved_from_pi += (char)Wire.read();
@@ -146,13 +146,13 @@ void loop()
   SHP = digitalRead(push_SHP);
   EMG = digitalRead(push_EMG);
 
-  // initialize i2c as slave
-  Wire.begin(SLAVE_ADDRESS);
-  // define callbacks for i2c communication
-  Wire.onReceive(receiveData);
-  Wire.onRequest(sendData);
-  Serial.println("Ready!");
-  digitalWrite(laser, HIGH);
+    // initialize i2c as slave
+    Wire.begin(SLAVE_ADDRESS);
+    // define callbacks for i2c communication
+    Wire.onReceive(receiveData);
+    Wire.onRequest(sendData);
+    Serial.println("Ready!");
+    digitalWrite(laser, HIGH);
   /*________Emergency_________*/
   if (data_recieved_from_pi[0] == 1)
   {
@@ -248,7 +248,11 @@ void loop()
     EMG = 1;
   }
   /*--------------------------------------------------*/
-
+/*-----------EMERENCY OFF-------------*/
+  if(EMG == 1 && data_recieved_from_pi[4] == 1)
+  {
+    EMG = 0;
+  }
 
   //sendData();
   //ALL  OUTPUTS
