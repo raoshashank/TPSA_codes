@@ -1,10 +1,9 @@
-#include <Wire.h>
+  #include <Wire.h>
 #define SLAVE_ADDRESS 0x05
 
 const int LDR_conv = A0;
 const int LDR_wall = A1;
 
-const int SMOKE = 4; //(?)
 
 const int IR = A2;
 const int LM35 = A3;
@@ -93,7 +92,6 @@ void setup()
 
   pinMode(LDR_conv, INPUT);
   pinMode(LDR_wall, INPUT);
-  pinMode(SMOKE, INPUT);
   pinMode(IR, INPUT);
   pinMode(LM35, INPUT);
   Serial.begin(9600);
@@ -126,9 +124,8 @@ void loop()
 {
   int LDR_Conv = analogRead(LDR_conv);
   int LDR_Wall = analogRead(LDR_wall);
-  int Smoke_Detector = analogRead(SMOKE);
   int Ir = analogRead(IR);
-  Lm = (analogRead(LM35) * 500) / 1023;
+  Lm = abs((analogRead(LM35) * 500) / 1023);
   SHP = digitalRead(push_SHP);
   EMG = digitalRead(push_EMG);
 
@@ -140,15 +137,18 @@ void loop()
   Serial.println("Ready!");
 
   /*___________________conv_motor____________*/
-  if (LDR_conv < 250)
-  {
+  /*if (LDR_conv < 250)
+    {
     analogWrite(motor_conv_enable, 255);
     delay(1000);
     analogWrite(motor_conv_direction, 0);
     delay(5000);
     analogWrite(motor_conv_enable, 0);
-  }
-
+    }*/
+  analogWrite(motor_conv_enable, 0);
+  digitalWrite(motor_conv_direction, LOW);
+  analogWrite(motor_gate_enable, 0);
+  digitalWrite(motor_gate_direction, LOW);
   /* ____________________________________________*/
 
 
@@ -171,7 +171,7 @@ void loop()
     GBG = 0;
   }
   /*--------------------------------*/
-  /*_____________________gate______________*/
+  /*_____________________gate______________
   if (Ir < 400 && gc == 0)
   {
     analogWrite(motor_conv_enable, 255);
@@ -189,18 +189,6 @@ void loop()
   else if (Ir > 400)
     gc = 0;
   /*________________________________________________*/
-
-  /*------------SMOKE DETECTOR--------------------------------------*/
-  //TODO: Calibrate the smoke sensor threshold value
-  int smoke_threshold = 600;
-  if (Smoke_Detector > smoke_threshold)
-  {
-    //SEND EMERGENCY REQUEST TO RPI
-    ring_alarm(1000, true);
-    gate_actuate(true);
-    EMG = 01;
-  }
-  /*--------------------------------------------------*/
 
 
   /*_____________________________lm35_______________*/
@@ -225,9 +213,8 @@ void loop()
   /*--------------------------------------------------*/
   Serial.println("LDR conv = " + String(LDR_Conv));
   Serial.println("LDR Wall = " + String(LDR_Wall));
-  Serial.println("Smoke = " + String(Smoke_Detector));
   Serial.println("IR = " + String(Ir));
-  Serial.println("LM35 = " + String(abs(Lm)));
+  Serial.println("LM35 = " + String(Lm));
   Serial.println("SHP=" + String(SHP));
   Serial.println("EMG=" + String(EMG));
   Serial.println("---------------------------");

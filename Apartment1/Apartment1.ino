@@ -1,19 +1,16 @@
 #include <Wire.h>
 #define SLAVE_ADDRESS 0x04
-const int LDR_top = A0;
-const int LDR_wall = A1;
+const int LDR_top = A1;
+const int LDR_wall = A0;
 const int smoke_detector = 4;
 const int IR = A3;
 const int LM35 = A2;
 //const int sensor_A5 = A5;
 
 const int motor_gate_enable = 10;
-const int motor_fan_enable = 11;
+const int motor_fan_enable = 10;
 const int motor_gate_direction = 12;
-const int motor_fan_direction = 13;
-
-const int ultrasonic_echo = 4;
-const int ultrasonic_trigger = 2;
+const int motor_fan_direction = 12;
 
 const int laser = 9;
 
@@ -73,9 +70,9 @@ void sendData()
 
 //TODO: Garbage disposal:Servo mechanism to
 //TODO: Use these functions instead of placing code in each if case
-void ring_alarm(int time_to_ring = 0, boolean stop_after = false)
+/*void ring_alarm(int time_to_ring = 0, boolean stop_after = false)
 {
-  digitalWrite(buzzer, HIGH);
+  digitalWrite(buzzer, LOW);
   if (stop_after)
   {
     delay(time_to_ring);
@@ -87,15 +84,8 @@ void stop_alarm()
 {
   digitalWrite(buzzer, LOW);
 }
+*/
 
-//true = HIGH, false = LOW
-void gate_actuate(bool dir)
-{
-  analogWrite(motor_gate_enable, 100);
-  if (dir == true)
-    digitalWrite(motor_gate_direction, HIGH);
-  else  digitalWrite(motor_gate_direction, LOW);
-}
 
 //TODO
 
@@ -107,8 +97,6 @@ void setup()
   pinMode(motor_fan_enable, OUTPUT);
   pinMode(motor_fan_direction, OUTPUT);
 
-  pinMode(ultrasonic_echo, INPUT);
-  pinMode(ultrasonic_trigger, OUTPUT);
 
   pinMode(push_SHP, INPUT);
   pinMode(push_EMG, INPUT);
@@ -139,20 +127,20 @@ void loop()
 
   int LDR_Top = analogRead(LDR_top);
   int LDR_Wall = analogRead(LDR_wall);
-  int Smoke_Detector = analogRead(smoke_detector);
+  int Smoke_Detector = digitalRead(smoke_detector);
   int Ir = analogRead(IR);
   Lm = (analogRead(LM35) * 500) / 1023;
   GBG = digitalRead(push_GBG);
   SHP = digitalRead(push_SHP);
   EMG = digitalRead(push_EMG);
 
-    // initialize i2c as slave
-    Wire.begin(SLAVE_ADDRESS);
-    // define callbacks for i2c communication
-    Wire.onReceive(receiveData);
-    Wire.onRequest(sendData);
-    Serial.println("Ready!");
-    digitalWrite(laser, HIGH);
+  // initialize i2c as slave
+  Wire.begin(SLAVE_ADDRESS);
+  // define callbacks for i2c communication
+  Wire.onReceive(receiveData);
+  Wire.onRequest(sendData);
+  Serial.println("Ready!");
+  digitalWrite(laser, HIGH);
   /*________Emergency_________*/
   if (data_recieved_from_pi[0] == 1)
   {
@@ -174,7 +162,7 @@ void loop()
   }
   /*--------------------------------*/
   /*------------------Burglar Alarm--------------------------------*/
-  if (LDR_Wall < 500)
+  if (LDR_Wall < 100)
   {
     digitalWrite(buzzer, HIGH);
     BURGLER = 1;
@@ -193,30 +181,30 @@ void loop()
   if (Ir < 100 && count == 0)
   {
     Serial.println("gate working");
-    //USE motor function here.
-    KCK = true;
-    //gate_actuate(true);
+   
     analogWrite(motor_gate_enable, 100);
     digitalWrite(motor_gate_direction, HIGH);
-    delay(3000);
+    delay(300);
     analogWrite(motor_gate_enable, 0);
-    delay(1500);
-    digitalWrite(motor_gate_direction, LOW);
-    delay(3000);
-    analogWrite(motor_gate_enable, 0);
+    delay(2000);
+        digitalWrite(motor_gate_direction,LOW);
+    analogWrite(11,100);
+    delay(300);
+    analogWrite(11,0);
+    
     count++;
   }
 
   else if (Ir > 100)
   {
-    analogWrite(motor_gate_enable, 0);
+    
     count = 0;
   }
   /*--------------------------------------------------*/
   /*-----------LM35---------------------------------------*/
-  if (Lm > 30)
+  if (Lm > 22)
   {
-    analogWrite(motor_fan_enable, 50);
+    analogWrite(motor_fan_enable, 255);
     digitalWrite(motor_fan_direction, HIGH);
   }
   else
@@ -239,17 +227,17 @@ void loop()
 
   /*------------SMOKE DETECTOR--------------------------------------*/
   //TODO: Calibrate the smoke sensor threshold value
-  int smoke_threshold = 0;
-  if (Smoke_Detector > smoke_threshold)
+  /*int smoke_threshold = 100;
+  if (Smoke_Detector < smoke_threshold)
   {
     //SEND EMERGENCY REQUEST TO RPI
     ring_alarm(1000, true);
-    gate_actuate(true);
+  
     EMG = 1;
-  }
+  }*/
   /*--------------------------------------------------*/
-/*-----------EMERENCY OFF-------------*/
-  if(EMG == 1 && data_recieved_from_pi[4] == 1)
+  /*-----------EMERENCY OFF-------------*/
+  if (EMG == 1 && data_recieved_from_pi[4] == 1)
   {
     EMG = 0;
   }
@@ -257,8 +245,8 @@ void loop()
   //sendData();
   //ALL  OUTPUTS
   /*--------------------------------------------------*/
-  Serial.println("LDR top = " + String(LDR_top));
-  Serial.println("LDR Wall = " + String(LDR_wall));
+  Serial.println("LDR top = " + String(LDR_Top));
+  Serial.println("LDR Wall = " + String(LDR_Wall));
   Serial.println("Smoke = " + String(Smoke_Detector));
   Serial.println("IR = " + String(Ir));
   Serial.println("LM35 = " + String(abs(Lm)));
@@ -267,7 +255,10 @@ void loop()
   Serial.println("EMG=" + String(EMG));
   Serial.println("---------------------------");
   /*--------------------------------------------------*/
-  delay(10);
+  delay(2000);
+  EMG = 0;
+  SHP = 0;
+  GBG = 0;
 
 
 
