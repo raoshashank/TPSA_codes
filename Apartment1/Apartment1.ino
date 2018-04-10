@@ -58,7 +58,7 @@ void sendData()
   data += "|";
   data += Lm;
   data += "&";
-  Serial.println("----------");
+  Serial.println("-----SENDING DATA-----");
   Serial.println(data);
   Wire.write(data.c_str());
 }
@@ -103,8 +103,8 @@ void setup()
   pinMode(push_GBG, INPUT);
 
   pinMode(LED_1, OUTPUT);
-  pinMode(LED_2, OUTPUT);
-  pinMode(LED_3, OUTPUT);
+  //pinMode(LED_2, OUTPUT);
+  //pinMode(LED_3, OUTPUT);
   pinMode(laser, OUTPUT);
 
   pinMode(buzzer, OUTPUT);
@@ -114,10 +114,13 @@ void setup()
   pinMode(smoke_detector, INPUT);
   pinMode(IR, INPUT);
   pinMode(LM35, INPUT);
-
-
+ 
+ // initialize i2c as slave
+  Wire.begin(SLAVE_ADDRESS);
+ // define callbacks for i2c communication
+  Wire.onReceive(receiveData);
+  Wire.onRequest(sendData);
   Serial.begin(9600);
-
 }
 
 int count = 0;
@@ -129,10 +132,11 @@ void loop()
   int LDR_Wall = analogRead(LDR_wall);
   int Smoke_Detector = digitalRead(smoke_detector);
   int Ir = analogRead(IR);
-  Lm = (analogRead(LM35) * 500) / 1023;
+  Lm = abs((analogRead(LM35) * 500) / 1023);
   GBG = digitalRead(push_GBG);
   SHP = digitalRead(push_SHP);
   EMG = digitalRead(push_EMG);
+<<<<<<< HEAD
 
   // initialize i2c as slave
   Wire.begin(SLAVE_ADDRESS);
@@ -140,6 +144,8 @@ void loop()
   Wire.onReceive(receiveData);
   Wire.onRequest(sendData);
   Serial.println("Ready!");
+=======
+>>>>>>> 7b69a25c3050c24d396195d7984c5be6f79c4be7
   digitalWrite(laser, HIGH);
   /*________Emergency_________*/
   if (data_recieved_from_pi[0] == 1)
@@ -184,7 +190,15 @@ void loop()
    
     analogWrite(motor_gate_enable, 100);
     digitalWrite(motor_gate_direction, HIGH);
+<<<<<<< HEAD
     delay(300);
+=======
+    //delay(3000);
+    analogWrite(motor_gate_enable, 0);
+    //delay(1500);
+    digitalWrite(motor_gate_direction, LOW);
+    //delay(3000);
+>>>>>>> 7b69a25c3050c24d396195d7984c5be6f79c4be7
     analogWrite(motor_gate_enable, 0);
     delay(2000);
         digitalWrite(motor_gate_direction,LOW);
@@ -255,10 +269,14 @@ void loop()
   Serial.println("EMG=" + String(EMG));
   Serial.println("---------------------------");
   /*--------------------------------------------------*/
+<<<<<<< HEAD
   delay(2000);
   EMG = 0;
   SHP = 0;
   GBG = 0;
+=======
+  //delay(10);
+>>>>>>> 7b69a25c3050c24d396195d7984c5be6f79c4be7
 
 
 

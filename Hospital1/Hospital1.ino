@@ -1,5 +1,10 @@
+<<<<<<< HEAD
   #include <Wire.h>
 #define SLAVE_ADDRESS 0x05
+=======
+#include <Wire.h>
+#define SLAVE_ADDRESS 0x06
+>>>>>>> 7b69a25c3050c24d396195d7984c5be6f79c4be7
 
 const int LDR_conv = A0;
 const int LDR_wall = A1;
@@ -28,10 +33,20 @@ int gc = 0;
 
 
 /*-----------------------------------------------------------*/
+void receiveData() {
 
+  while ( Wire.available()) {
+    data_recieved_from_pi += (char)Wire.read();
+  }
+
+  Serial.print("Data Received From PI:");
+  Serial.println(data_recieved_from_pi);
+
+  data_recieved_from_pi = "";
+}
 void sendData()
 {
-  String data = "@@04|";
+  String data = "@@06|";
   data += EMG;
   data += SHP;
   data += "0";
@@ -41,7 +56,7 @@ void sendData()
   data += "|";
   data += Lm;
   data += "&";
-  Serial.println("----------");
+  Serial.println("-----SENDING DATA-----");
   Serial.println(data);
   Wire.write(data.c_str());
 }
@@ -94,21 +109,15 @@ void setup()
   pinMode(LDR_wall, INPUT);
   pinMode(IR, INPUT);
   pinMode(LM35, INPUT);
+  Wire.begin(SLAVE_ADDRESS);
+  // define callbacks for i2c communication
+  Wire.onReceive(receiveData);
+  Wire.onRequest(sendData);
   Serial.begin(9600);
 
 }
 
-void receiveData() {
 
-  while ( Wire.available()) {
-    data_recieved_from_pi += (char)Wire.read();
-  }
-
-  Serial.print("Data Received From PI:");
-  Serial.println(data_recieved_from_pi);
-
-  data_recieved_from_pi = "";
-}
 /*TODO
    LDR-CONVEYOR
    IR and Gate
@@ -130,19 +139,13 @@ void loop()
   EMG = digitalRead(push_EMG);
 
   // initialize i2c as slave
-  Wire.begin(SLAVE_ADDRESS);
-  // define callbacks for i2c communication
-  Wire.onReceive(receiveData);
-  Wire.onRequest(sendData);
-  Serial.println("Ready!");
-
   /*___________________conv_motor____________*/
   /*if (LDR_conv < 250)
     {
     analogWrite(motor_conv_enable, 255);
-    delay(1000);
+    //delay(1000);
     analogWrite(motor_conv_direction, 0);
-    delay(5000);
+    //delay(5000);
     analogWrite(motor_conv_enable, 0);
     }*/
   analogWrite(motor_conv_enable, 0);
@@ -171,6 +174,7 @@ void loop()
     GBG = 0;
   }
   /*--------------------------------*/
+<<<<<<< HEAD
   /*_____________________gate______________
   if (Ir < 400 && gc == 0)
   {
@@ -185,6 +189,22 @@ void loop()
     Serial.println("open");
     delay(3000);
   }
+=======
+  /*_____________________gate______________*/
+//  if (Ir < 400 && gc == 0)
+//  {
+//    analogWrite(motor_conv_enable, 255);
+//    digitalWrite(motor_conv_direction, HIGH);
+//    //delay(3000);
+//    Serial.println("close");
+//    analogWrite(motor_conv_enable, 0);
+//    //delay(3000);
+//    digitalWrite(motor_conv_direction, LOW);
+//    analogWrite(motor_conv_enable, 255);
+//    Serial.println("open");
+//    //delay(3000);
+//  }
+>>>>>>> 7b69a25c3050c24d396195d7984c5be6f79c4be7
 
   else if (Ir > 400)
     gc = 0;
@@ -219,7 +239,7 @@ void loop()
   Serial.println("EMG=" + String(EMG));
   Serial.println("---------------------------");
   /*--------------------------------------------------*/
-  delay(10);
+  //delay(10);
 
 }
 /*_____________________________*/
