@@ -1,6 +1,6 @@
 #include<Servo.h>
 #include<Wire.h>
-#define SLAVE_ADDRESS 0x03
+#define SLAVE_ADDRESS 0x05
 
 #define Bit_out 4 // Pin 1-2 SN74164
 #define CLK 5 // Pin 9 Sn74164
@@ -54,7 +54,10 @@ void setup() {
   digitalWrite(CLK, LOW);
   digitalWrite(RS, LOW); // LCD in command mode default
   digitalWrite(E, HIGH);
-
+  Wire.begin(SLAVE_ADDRESS);
+  // define callbacks for i2c communication
+  Wire.onReceive(receiveData);
+  Wire.onRequest(sendData);
   initLCD();
 
   Serial.begin(9600);
@@ -84,15 +87,15 @@ void writeCommand(byte val)   {
 
 // Below we pass a pointer to array1[0].
 void typeln(char *s, int location)   {
-  delayMicroseconds(1000);
+  //delayMicroseconds(1000);
   writeCommand(location); // where to begin
   while (*s)  typeChar(*(s++));
 }  // end typeln
 
 // inverts state of pin, delays, then reverts state back
-void    pulseOut(byte x)   {
+void pulseOut(byte x)   {
   byte z = digitalRead(x);
-  delayMicroseconds(10);
+  //delayMicroseconds(10);
   z = !z; // reverse state
   digitalWrite(x, z);
   z = !z; // return to original state
@@ -160,7 +163,7 @@ void ClearDisplay(void)   {
 
 void sendData()
 {
-  String data = "@@04|";
+  String data = "@@05|";
   data += EMG;
   data += SHP;
   data += "0";
@@ -170,7 +173,7 @@ void sendData()
   data += "|";
   data += Lm;
   data += "&";
-  Serial.println("----------");
+  Serial.println("-----SENDING DATA-----");
   Serial.println(data);
   Wire.write(data.c_str());
 }
@@ -190,34 +193,20 @@ void receiveData() {
 
 void loop() {
   // initialize i2c as slave
-  Wire.begin(SLAVE_ADDRESS);
-  // define callbacks for i2c communication
-  Wire.onReceive(receiveData);
-  Wire.onRequest(sendData);
-  Serial.println("Ready!");
-
+ 
   //push buttons
   EMG = digitalRead(push_EMG);
   /*________________delivery mechanism____________*/
   int ir = analogRead(IR);
-  Serial.println("ir " + String(ir));
   count++;
 
   //COMMUNICATION ARRAY
-  // initialize i2c as slave
-  Wire.begin(SLAVE_ADDRESS);
-  // define callbacks for i2c communication
-  Wire.onReceive(receiveData);
-  Wire.onRequest(sendData);
-  Serial.println("Ready!");
-
   /*_________________________________*/
   // HIGH = Buzzer on , LOW = Buzzer off
   //TODO : Smoke sensor integration
 
   /*______________buzzer_______________*/
   int  temp = analogRead(LM35) * 500 / 1023;
-  Serial.println("Temp " + String(temp));
   if (temp > temp_max)
   {
     digitalWrite(11, HIGH);
@@ -228,12 +217,11 @@ void loop() {
   }
   /*________Smoke sensor____________*/
   int  smoke_sensor = analogRead(SMOKE);
-  Serial.println("Smoke " + String(smoke_sensor));
   if (smoke_sensor > smoke_max)
   {
     digitalWrite(13 , HIGH);
     Serial.println("Emergency");
-    delay(10000);
+    //delay(10000);
     EMG = 1;
   }
   /*___________*/
@@ -245,11 +233,11 @@ void loop() {
   //   below simply prints "Hello World!" on line 1
   char String1[] = "Deliveries dispatched: ";
   typeln(String1, Line1);
-  delay(3000);
+  //delay(3000);
   char String2[] = "WELCOME TO THE MALL";
   typeln(String2, Line1);
 
-  delay(500);
+  //delay(500);
   ClearDisplay();
   /*---------------*/
 
@@ -261,7 +249,7 @@ void loop() {
     {
       digitalWrite(conv_input,HIGH);
       digitalWrite(conv_direction,HIGH);
-      delay(4000);
+      //delay(4000);
       digitalWrite(conv_input,LOW);
     }
     else 
@@ -270,4 +258,12 @@ void loop() {
       digitalWrite(conv_direction,LOW);
      }
   }
+    
+    /*________print DATA_____________*/
+    Serial.println("Smoke " + String(smoke_sensor));
+    Serial.println("Temp " + String(temp));
+    Serial.println("ir " + String(ir));
+    /*_______________________________*/
+
+  delay(500);
 }
