@@ -1,6 +1,6 @@
 #include<Servo.h>
 #include <Wire.h>
-#define SLAVE_ADDRESS 0x06
+#define SLAVE_ADDRESS 0x05
 const int LDR_wall = A0, IR = A1;
 int count = 0;
 int LM35 = A2;
@@ -25,13 +25,14 @@ const int  push_SHP = 1;
 
 int EMG, SHP, KCK, Lm;
 
-String data_recieved_from_pi = "";
+String data = "@@05|";
 int gc = 0;
 
 Servo myservo;
 
 
 void setup() {
+  Serial.begin(250000);
   pinMode(LDR_wall, INPUT);
   pinMode(IR, INPUT);
   pinMode(SMOKE, INPUT);
@@ -54,14 +55,18 @@ void setup() {
   //Wire.onReceive(receiveData);
   
   initLCD(); // see below
-  Serial.begin(9600);
 
 }
-
+void receiveData()
+{
+  while ( Wire.available()) {
+    data=Wire.read();
+  }
+}
 
 void sendData()
 {
-  String data = "##02|";
+  String data = "@@05|";
   data += EMG;
   data += SHP;
   data += "0";
@@ -69,11 +74,8 @@ void sendData()
   /*------data to send------*/
   data += "000";
   data += "|";
-  Serial.println("LM" + String(Lm));
   data += Lm;
   data += "&";
-  Serial.println("----------SENDING DATA---------");
-  Serial.println(data);
   Wire.write(data.c_str());
 }
 /*-----------------------------------------------------------*/
@@ -227,7 +229,6 @@ void loop() {
   if (smoke_sensor > 1000)
   {
     digitalWrite(buzz , HIGH);
-    Serial.println("Emergency");
     //delay(10000);
     EMG = 1;
   }
@@ -250,16 +251,9 @@ void loop() {
     //delay(5000);
     digitalWrite(led, LOW);
   }
-  /*______________*/
 
-  /*_________________________OUTPUTS_________________________*/
-  Serial.println("Temp " + String(abs(Lm)));                                                                                                            
-  Serial.println("ldr " + String(ldr));
-  Serial.println("Smoke " + String(smoke_sensor));
-  Serial.println("ir " + String(ir));
-  Serial.println("SHP:" + String(SHP));
-  Serial.println("EMG:" + String(EMG));
-  delay(500);
+
+  delay(100);
 
   
 }

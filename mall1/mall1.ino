@@ -1,6 +1,6 @@
 #include<Servo.h>
 #include<Wire.h>
-#define SLAVE_ADDRESS 0x05
+#define SLAVE_ADDRESS 0x07
 
 #define Bit_out 4 // Pin 1-2 SN74164
 #define CLK 5 // Pin 9 Sn74164
@@ -33,11 +33,12 @@ int count = 0;
 
 int EMG, SHP, KCK, Lm;
 
-String data_recieved_from_pi = "";
+String data = "";
 int gc = 0;
 
 
-void setup() {
+void setup() {  
+  Serial.begin(250000);
   pinMode(LM35, INPUT);
   pinMode(SMOKE, INPUT);
   pinMode(IR, INPUT);
@@ -55,12 +56,10 @@ void setup() {
   digitalWrite(RS, LOW); // LCD in command mode default
   digitalWrite(E, HIGH);
   Wire.begin(SLAVE_ADDRESS);
-  // define callbacks for i2c communication
   Wire.onReceive(receiveData);
   Wire.onRequest(sendData);
   initLCD();
 
-  Serial.begin(9600);
 
 }
 
@@ -163,31 +162,23 @@ void ClearDisplay(void)   {
 
 void sendData()
 {
-  String data = "@@05|";
-  data += EMG;
-  data += SHP;
-  data += "0";
-  data += KCK;
-  /*------data to send------*/
-  data += "000";
-  data += "|";
-  data += Lm;
-  data += "&";
-  Serial.println("-----SENDING DATA-----");
-  Serial.println(data);
+  data="@@07|";
+  data += String(EMG);
+  data += String(SHP);
+  data += String("0");
+  data += String("000");
+  data += String("|");
+  data += String(Lm);
+  data += String("&");
   Wire.write(data.c_str());
 }
-/*-----------------------------------------------------------*/
+
 void receiveData() {
 
-  while ( Wire.available()) {
-    data_recieved_from_pi += (char)Wire.read();
+  while ( Wire.available())
+  {
+    data=Wire.read();
   }
-
-  Serial.print("Data Received From PI:");
-  Serial.println(data_recieved_from_pi);
-
-  data_recieved_from_pi = "";
 }
 /*------------------------------------*/
 
@@ -220,7 +211,6 @@ void loop() {
   if (smoke_sensor > smoke_max)
   {
     digitalWrite(13 , HIGH);
-    Serial.println("Emergency");
     //delay(10000);
     EMG = 1;
   }
@@ -243,7 +233,7 @@ void loop() {
 
   /*---Conveyer----*/
   digitalWrite(conv, HIGH);
-  if ( data_recieved_from_pi[5] == 1 )
+  if ( data[5] == 1 )
   {
     if (ir > ir_enable)
     {
@@ -259,11 +249,5 @@ void loop() {
      }
   }
     
-    /*________print DATA_____________*/
-    Serial.println("Smoke " + String(smoke_sensor));
-    Serial.println("Temp " + String(temp));
-    Serial.println("ir " + String(ir));
-    /*_______________________________*/
-
-  delay(500);
+  delay(100);
 }
