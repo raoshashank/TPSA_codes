@@ -10,12 +10,12 @@
 #define Line1 0x80  // location LCD row 0 col 0 or line 1 LCD
 #define Line2 0x80 + 0x40  // location row 1 col 0 or line 2 LCD
 
-const int IR = A2;
+//const int IR = A2;
 int pos = 0;
-int ir_enable = 500;
-const int LM35 = A0;
+//int ir_enable = 500;
+const int LM35 = A1;
 int temp_max = 28;
-const int SMOKE = A1;
+const int SMOKE = A0;
 int smoke_max = 200;
 int burg = 300;
 Servo myservo;
@@ -31,7 +31,7 @@ const int LED = 2;
 int clk = 3;
 int count = 0;
 
-int EMG, SHP, KCK, Lm;
+int EMG, SHP, KCK, Lm,conv_st;
 
 String data = "";
 int gc = 0;
@@ -62,7 +62,18 @@ void setup() {
 
 
 }
-
+void sendData()
+{
+  data="@@07|";
+  data += String(EMG);
+  data += String(SHP);
+  data += String("0");
+  data += String("00000000");
+  data += String("|");
+  data += String(Lm);
+  data += "&";
+  Wire.write(data.c_str());
+}
 void typeInt(int k, int location)   {
   char array1[10];
   itoa(k, array1, 10); // int to string
@@ -160,18 +171,7 @@ void ClearDisplay(void)   {
   writeCommand(0x02); // home
 }
 
-void sendData()
-{
-  data="@@07|";
-  data += String(EMG);
-  data += String(SHP);
-  data += String("0");
-  data += String("000");
-  data += String("|");
-  data += String(Lm);
-  data += String("&");
-  Wire.write(data.c_str());
-}
+
 
 void receiveData() {
 
@@ -233,10 +233,11 @@ void loop() {
 
   /*---Conveyer----*/
   digitalWrite(conv, HIGH);
-  if ( data[5] == 1 )
-  {
+//  if ( data[5] == 1 )
+//  { 
     if (ir > ir_enable)
     {
+      conv_st=1;
       digitalWrite(conv_input,HIGH);
       digitalWrite(conv_direction,HIGH);
       //delay(4000);
@@ -244,10 +245,11 @@ void loop() {
     }
     else 
     {
+      conv_st=0
       digitalWrite(conv_input,LOW);
       digitalWrite(conv_direction,LOW);
      }
-  }
+//  }
     
   delay(100);
 }

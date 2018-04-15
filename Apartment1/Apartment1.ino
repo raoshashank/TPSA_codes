@@ -1,15 +1,15 @@
 #include <Wire.h>
 #define SLAVE_ADDRESS 0x06
-
+const int baud_rate=9600;
 const int LDR_top = A1;
 const int LDR_wall = A0;
 const int smoke_detector = 4;
 const int IR = A3;
 const int LM35 = A2;
 
-const int motor_gate_enable = 10;
+const int motor_gate_enable = 11;
 const int motor_fan_enable = 10;
-const int motor_gate_direction = 12;
+const int motor_gate_direction = 13;
 const int motor_fan_direction = 12;
 
 const int laser = 9;
@@ -18,12 +18,10 @@ const int  push_GBG = 5;
 const int  push_EMG = 7;
 const int  push_SHP = 6;
 
-const int LED_1 = 0;
-const int LED_2 = 1;
-const int LED_3 = 3;
+const int LED_1 = 1;
 
 const int buzzer = 8;
-int GBG, EMG, SHP, KCK, Lm, BURGLER;
+int GBG, EMG, SHP, KCK, Lm, BURGLER,smart_light,smoke;
 
 String data = "@@06|";
 
@@ -39,27 +37,28 @@ void receiveData()
 void sendData()
 {
   data = "@@06|";
-  data += EMG;
-  data += SHP;
-  data += GBG;
-  data += BURGLER;
-  data += KCK;
-  data += "000";
+  data += String(EMG);
+  data += String(SHP);
+  data += String(GBG);
+  data+="0";//Garbage IR
+  data+=String(smart_light);
+  data += String(BURGLER);
+  data += String(KCK);
+  data += String(smoke);
+  data+="0";
   data += "|";
-  data += Lm;
+  data += String(Lm);
   data += "&";
   Wire.write(data.c_str());
 }
 
 void setup()
-{
-  Serial.begin(250000);
-
+{ 
+  Serial.begin(baud_rate);
   pinMode(motor_gate_enable, OUTPUT);
   pinMode(motor_gate_direction, OUTPUT);
   pinMode(motor_fan_enable, OUTPUT);
   pinMode(motor_fan_direction, OUTPUT);
-
 
   pinMode(push_SHP, INPUT);
   pinMode(push_EMG, INPUT);
@@ -95,6 +94,7 @@ void loop()
   GBG = digitalRead(push_GBG);
   SHP = digitalRead(push_SHP);
   EMG = digitalRead(push_EMG);
+  smart_light=0;
 
   digitalWrite(laser, HIGH);
 
@@ -114,7 +114,7 @@ void loop()
     GBG = 0;
   }
 
-  if (LDR_Wall < 100)
+  if (LDR_Wall < 150)
   {
     digitalWrite(buzzer, HIGH);
     BURGLER = 1;
@@ -124,32 +124,40 @@ void loop()
     BURGLER = 0;
   }
 
-
+  if(Smoke_Detector==1){
+    smoke=1;
+    analogWrite(motor_fan_enable, 255);
+    digitalWrite(motor_fan_direction, HIGH);
+    EMG=1;
+  }
+  else{
+    smoke=0;
+    analogWrite(motor_fan_enable, 0);
+    EMG=0;
+  }
 
   if (Ir < 100 && count == 0)
   {
 
-    analogWrite(motor_gate_enable, 100);
+    analogWrite(motor_gate_enable, 255);
     digitalWrite(motor_gate_direction, HIGH);
-
-    delay(3000);
-    analogWrite(motor_gate_enable, 0);
-    delay(1500);
-    digitalWrite(motor_gate_direction, LOW);
-    delay(3000);
-    analogWrite(motor_gate_enable, 0);
-    delay(2000);
-    digitalWrite(motor_gate_direction, LOW);
-    analogWrite(11, 100);
     delay(300);
-    analogWrite(11, 0);
-
+    analogWrite(motor_gate_enable, 0);
+    delay(1000);
+    digitalWrite(motor_gate_direction, LOW);
+    analogWrite(motor_gate_enable, 255);
+    delay(300);
+    //delay(700);
+    //digitalWrite(motor_gate_direction, LOW);
+    //analogWrite(motor_gate_enable, 100);
+    //delay(300);
+    analogWrite(motor_gate_enable, 0);
     count++;
   }
 
   else if (Ir > 100)
   {
-
+    analogWrite(motor_gate_enable, 0);
     count = 0;
   }
 
@@ -161,22 +169,31 @@ void loop()
   else
     analogWrite(motor_fan_enable, 0);
 
-  if (LDR_wall < 300)
+  if (LDR_Wall < 300)
   {
     digitalWrite(LED_1, HIGH);
-    digitalWrite(LED_2, HIGH);
-    digitalWrite(LED_3, HIGH);
+    
   }
   else {
     digitalWrite(LED_1, LOW);
-    digitalWrite(LED_2, LOW);
-    digitalWrite(LED_3, LOW);
+    
   }
-
+  if (LDR_Top >300)
+  {
+    smart_light=1;
+    digitalWrite(LED_1,HIGH);
+  }
+  else{
+    digitalWrite(LED_1,LOW);
+  }
 
   if (EMG == 1 && data[4] == 1)
   {
     EMG = 0;
   }
+  Serial.println("Ldr Wall: " +String(LDR_Wall));
+  Serial.println("IR: " +String(Ir));
+  Serial.println("LM: " +String(Lm));
+  
 
 }

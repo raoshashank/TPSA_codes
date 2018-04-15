@@ -2,14 +2,15 @@
 #include <Wire.h>
 #define SLAVE_ADDRESS 0x05
 const int LDR_wall = A0, IR = A1;
+const int baud_rate=9600;
 int count = 0;
 int LM35 = A2;
 const int SMOKE = A3;
 int pos = 0;
 int servo = 10;
-int buzz = 12;
-int temp_fan = 11;
-int fan_dir = 13;
+int buzz = 13;
+int temp_fan = 12;
+int fan_dir = 11;
 int led = 7;
 
 #define Bit_out 8 // Pin 1-2 SN74164
@@ -23,7 +24,7 @@ int led = 7;
 const int  push_EMG = 0;
 const int  push_SHP = 1;
 
-int EMG, SHP, KCK, Lm;
+int EMG, SHP, KCK, Lm,smoke,ir_st,ir_room_1,ir_room_2,smart_light;
 
 String data = "@@05|";
 int gc = 0;
@@ -32,7 +33,7 @@ Servo myservo;
 
 
 void setup() {
-  Serial.begin(250000);
+  Serial.begin(baud_rate);
   pinMode(LDR_wall, INPUT);
   pinMode(IR, INPUT);
   pinMode(SMOKE, INPUT);
@@ -67,14 +68,16 @@ void receiveData()
 void sendData()
 {
   String data = "@@05|";
-  data += EMG;
-  data += SHP;
-  data += "0";
-  //data += KCK;
-  /*------data to send------*/
-  data += "000";
+  data += String(EMG);
+  data += String(SHP);
+  data+="0";
+  data+=String(smoke);//smoke
+  data+="0"; //garbage ir
+  data+=String(ir_st); //ir room 1
+  data+="0"; //ir room 2'
+  data+=String(smart_light);//ldr
   data += "|";
-  data += Lm;
+  data += String(Lm);
   data += "&";
   Wire.write(data.c_str());
 }
@@ -194,7 +197,7 @@ void loop() {
   int ir = analogRead(IR);
   if (ir > 100)
   {
-   
+      ir_st=1;
       myservo.write(90);              // tell servo to go to position in variable 'pos'
       //delay(15);                       // waits 15ms for the servo to reach the position
     
@@ -202,6 +205,7 @@ void loop() {
   
   else if (ir < 100)
   {
+    ir_st=0;
     //for (pos = 180; pos >= 0; pos -= 1) // goes from 180 degrees to 0 degrees
       myservo.write(0);              // tell servo to go to position in variable 'pos'
                      // waits 15ms for the servo to reach the position
@@ -228,9 +232,13 @@ void loop() {
   int  smoke_sensor = analogRead(A1);
   if (smoke_sensor > 1000)
   {
+    smoke=1;
     digitalWrite(buzz , HIGH);
     //delay(10000);
     EMG = 1;
+  }
+  else{
+    smoke=0;
   }
   /*___________*/
   /*______clock_________*/
@@ -241,19 +249,29 @@ void loop() {
     //delay(1000);
     digitalWrite(buzz, LOW);
   }
+  
   /*_________________*/
   
   /*_____Burglar alarm_____________*/
   int ldr = 1023 - analogRead(A0);
   if ( ldr < 100)
-  {
+  { 
+    smart_light=1;
     digitalWrite(led, HIGH);
     //delay(5000);
     digitalWrite(led, LOW);
   }
-
-
+  else{
+    smart_light=0;
+  }
+  
+  Serial.println("Temp " + String(abs(Lm)));                                                                                                            
+  Serial.println("ldr " + String(ldr));
+  Serial.println("Smoke " + String(smoke_sensor));
+  Serial.println("ir " + String(ir));
+  Serial.println("SHP:" + String(SHP));
+  Serial.println("EMG:" + String(EMG));
   delay(100);
-
+  
   
 }
