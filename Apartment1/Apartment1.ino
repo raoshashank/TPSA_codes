@@ -1,11 +1,19 @@
+#include<Servo.h>
 #include <Wire.h>
 #define SLAVE_ADDRESS 0x06
-const int baud_rate=9600;
+const int baud_rate=9600;   
 const int LDR_top = A1;
 const int LDR_wall = A0;
 const int smoke_detector = 4;
 const int IR = A3;
 const int LM35 = A2;
+int bot_detect;
+int angle=120;
+int garbage_level,garbage_full;
+Servo bin;
+
+const int servo_gbg=3;
+const int ir_gbg=2;
 
 const int motor_gate_enable = 11;
 const int motor_fan_enable = 10;
@@ -15,8 +23,8 @@ const int motor_fan_direction = 12;
 const int laser = 9;
 
 const int  push_GBG = 5;
-const int  push_EMG = 7;
-const int  push_SHP = 6;
+const int  push_EMG = 6;
+const int  push_SHP = 7;
 
 const int LED_1 = 1;
 
@@ -55,6 +63,9 @@ void sendData()
 void setup()
 { 
   Serial.begin(baud_rate);
+  bin.attach(servo_gbg); //3 is the pwm pin for servo actuation
+  pinMode(ir_gbg,INPUT); 
+  bin.write(0);
   pinMode(motor_gate_enable, OUTPUT);
   pinMode(motor_gate_direction, OUTPUT);
   pinMode(motor_fan_enable, OUTPUT);
@@ -124,7 +135,7 @@ void loop()
     BURGLER = 0;
   }
 
-  if(Smoke_Detector==1){
+  if(Smoke_Detector==0){
     smoke=1;
     analogWrite(motor_fan_enable, 255);
     digitalWrite(motor_fan_direction, HIGH);
@@ -191,6 +202,31 @@ void loop()
   {
     EMG = 0;
   }
+
+   bot_detect = digitalRead(ir_gbg);
+    if(bot_detect==0)
+    {
+      bot_detect=digitalRead(ir_gbg);
+      if(bot_detect==0)
+      { 
+        //Serial.println("Bot detected. Actuating garbage loader.");
+        for(int i=0;i<angle;i++)
+        {
+          bin.write(i);
+          delay(15);
+        }
+        //delay(2000);
+        for(int i=0;i<angle;i++)
+        {
+          bin.write(angle-i);
+          delay(15);
+        }
+        
+       }
+    }
+
+
+  
   Serial.println("Ldr Wall: " +String(LDR_Wall));
   Serial.println("IR: " +String(Ir));
   Serial.println("LM: " +String(Lm));
