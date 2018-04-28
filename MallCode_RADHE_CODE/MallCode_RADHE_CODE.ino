@@ -1,6 +1,6 @@
 #include<Servo.h>
 #include<Wire.h>
-#define SLAVE_ADDRESS 0x05
+#define SLAVE_ADDRESS 0x07
 const int baud_rate=9600;
 #define Bit_out 4 // Pin 1-2 SN74164
 #define CLK 5 // Pin 9 Sn74164
@@ -16,7 +16,6 @@ const int grnd = 12;
 const int SMOKE = A0;
 const int LM35 = A1;
 const int LDR = A2;
-
 int fan_enable = 9;
 int fan_input = 10;
 

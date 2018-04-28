@@ -1,8 +1,8 @@
-#include<Servo.h>
+
+aced#include<Servo.h>
 #include <Wire.h>
 #define SLAVE_ADDRESS 0x06
-const int baud_rate=9600;   
-const int LDR_top = A1;
+  const int LDR_top = A1;
 const int LDR_wall = A0;
 const int smoke_detector = 4;
 const int IR = A3;
@@ -14,6 +14,7 @@ Servo bin;
 
 const int servo_gbg=3;
 const int ir_gbg=2;
+int gbg_count=0;
 
 const int motor_gate_enable = 11;
 const int motor_fan_enable = 10;
@@ -48,14 +49,14 @@ void sendData()
   data += String(EMG);
   data += String(SHP);
   data += String(GBG);
-  data+="0";//Garbage IR
-  data+=String(smart_light);
+  data+=  String(bot_detect);//Garbage IR
+  data+=  String(smart_light);
   data += String(BURGLER);
   data += String(KCK);
   data += String(smoke);
   data+="0";
   data += "|";
-  data += String(Lm);
+  data += String(abs(Lm));
   data += "&";
   Wire.write(data.c_str());
 }
@@ -76,6 +77,7 @@ void setup()
   pinMode(push_GBG, INPUT);
 
   pinMode(LED_1, OUTPUT);
+  pinMode(0,OUTPUT);
 
   pinMode(laser, OUTPUT);
 
@@ -105,25 +107,12 @@ void loop()
   GBG = digitalRead(push_GBG);
   SHP = digitalRead(push_SHP);
   EMG = digitalRead(push_EMG);
+  bot_detect = digitalRead(ir_gbg);
+
   smart_light=0;
 
   digitalWrite(laser, HIGH);
 
-  if (data[0] == 1)
-  {
-    EMG = 0;
-  }
-
-
-  if (data[0] == 1)
-  {
-    SHP = 0;
-  }
-
-  if (data[0] == 1)
-  {
-    GBG = 0;
-  }
 
   if (LDR_Wall < 150)
   {
@@ -139,11 +128,13 @@ void loop()
     smoke=1;
     analogWrite(motor_fan_enable, 255);
     digitalWrite(motor_fan_direction, HIGH);
+    digitalWrite(buzzer,HIGH);
     EMG=1;
   }
   else{
     smoke=0;
     analogWrite(motor_fan_enable, 0);
+    digitalWrite(buzzer,LOW);
     EMG=0;
   }
 
@@ -180,35 +171,33 @@ void loop()
   else
     analogWrite(motor_fan_enable, 0);
 
-  if (LDR_Wall < 300)
+  if (LDR_Wall < 350)
   {
-    digitalWrite(LED_1, HIGH);
-    
+    digitalWrite(buzzer,HIGH);
   }
   else {
-    digitalWrite(LED_1, LOW);
+    digitalWrite(buzzer,LOW);
     
   }
-  if (LDR_Top >300)
+  
+  if (LDR_Top<300)
   {
     smart_light=1;
-    digitalWrite(LED_1,HIGH);
+    digitalWrite(0,HIGH);
   }
   else{
-    digitalWrite(LED_1,LOW);
+    digitalWrite(0,LOW);
   }
+//
+//  if (EMG == 1 && data[4] == 1)
+//  {
+//    EMG = 0;
+//  }
 
-  if (EMG == 1 && data[4] == 1)
-  {
-    EMG = 0;
-  }
-
-   bot_detect = digitalRead(ir_gbg);
-    if(bot_detect==0)
+    if(bot_detect==0 && gbg_count==0)
     {
-      bot_detect=digitalRead(ir_gbg);
-      if(bot_detect==0)
-      { 
+      gbg_count=1;
+     
         //Serial.println("Bot detected. Actuating garbage loader.");
         for(int i=0;i<angle;i++)
         {
@@ -221,15 +210,14 @@ void loop()
           bin.write(angle-i);
           delay(15);
         }
-        
-       }
     }
-
-
+    else if(bot_detect==1)
+    {
+      gbg_count=0;
+    }
   
-  Serial.println("Ldr Wall: " +String(LDR_Wall));
-  Serial.println("IR: " +String(Ir));
-  Serial.println("LM: " +String(Lm));
-  
-
+  //Serial.println("IR gbg: "+String(digitalRead(ir_gbg)));
+  //Serial.println("SMOKE :"+String(Smoke_Detector));
+  Serial.println("LDR_TOP: " + String(LDR_Top));
+ // digitalWrite(0,LOW);
 }

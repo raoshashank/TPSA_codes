@@ -20,7 +20,7 @@ void loop() {
     {
       bot_detect=digitalRead(ir_gbg);
       if(bot_detect==0)
-      { 
+      {  
         //Serial.println("Bot detected. Actuating garbage loader.");
         for(int i=0;i<angle;i++)
         {

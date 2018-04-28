@@ -4,15 +4,15 @@
 
 #define Bit_out 4 // Pin 1-2 SN74164
 #define CLK 5 // Pin 9 Sn74164
-#define RS A3  // Pin 4 LCD
-#define E 6  // Pin 6 LCD
+#define RS 0  // Pin 4 LCD
+#define E 1  // Pin 6 LCD
 
 #define Line1 0x80  // location LCD row 0 col 0 or line 1 LCD
 #define Line2 0x80 + 0x40  // location row 1 col 0 or line 2 LCD
-
-//const int IR = A2;
+/*
+const int IR = A2;
 int pos = 0;
-//int ir_enable = 500;
+int ir_enable = 500;
 const int LM35 = A1;
 int temp_max = 28;
 const int SMOKE = A0;
@@ -24,6 +24,15 @@ int buzzer = 8;
 int conv = 9;
 int conv_input = 10;
 int conv_direction = 12;
+*/
+const int trigPin = 6;
+const int echoPin = A3;
+const int grnd = 12;
+const int SMOKE = A0;
+const int LM35 = A1;
+const int LDR = A2;
+int fan_enable = 9;
+int fan_input = 10;
 
 int push_SHP = 13;
 
@@ -245,7 +254,7 @@ void loop() {
     }
     else 
     {
-      conv_st=0
+      conv_st=0;
       digitalWrite(conv_input,LOW);
       digitalWrite(conv_direction,LOW);
      }
