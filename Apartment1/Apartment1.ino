@@ -1,8 +1,9 @@
 
-aced#include<Servo.h>
+#include<Servo.h>
 #include <Wire.h>
 #define SLAVE_ADDRESS 0x06
-  const int LDR_top = A1;
+const int baud_rate=9600;
+const int LDR_top = A1;
 const int LDR_wall = A0;
 const int smoke_detector = 4;
 const int IR = A3;
@@ -46,14 +47,14 @@ void receiveData()
 void sendData()
 {
   data = "@@06|";
-  data += String(EMG);
+  data += String(0);
   data += String(SHP);
   data += String(GBG);
-  data+=  String(bot_detect);//Garbage IR
+  data+=  String(!bot_detect);//Garbage IR
   data+=  String(smart_light);
   data += String(BURGLER);
-  data += String(KCK);
-  data += String(smoke);
+  data += String(0);
+  data += String(0);
   data+="0";
   data += "|";
   data += String(abs(Lm));
@@ -197,7 +198,6 @@ void loop()
     if(bot_detect==0 && gbg_count==0)
     {
       gbg_count=1;
-     
         //Serial.println("Bot detected. Actuating garbage loader.");
         for(int i=0;i<angle;i++)
         {
@@ -218,6 +218,8 @@ void loop()
   
   //Serial.println("IR gbg: "+String(digitalRead(ir_gbg)));
   //Serial.println("SMOKE :"+String(Smoke_Detector));
-  Serial.println("LDR_TOP: " + String(LDR_Top));
+  //Serial.println("LDR_TOP: " + String(LDR_Top));
+
+ 
  // digitalWrite(0,LOW);
 }

@@ -21,8 +21,8 @@ int led = 7;
 #define Line1 0x80  // location LCD row 0 col 0 or line 1 LCD
 #define Line2 0x80 + 0x40  // location row 1 col 0 or line 2 LCD
 
-const int  push_EMG = 0;
-const int  push_SHP = 1;
+const int  push_EMG = 5;
+const int  push_SHP = 6;
 
 int EMG, SHP, KCK, Lm,smoke,ir_st,ir_room_1,ir_room_2,smart_light;
 
@@ -46,6 +46,8 @@ void setup() {
   pinMode(CLK, OUTPUT);
   pinMode(RS, OUTPUT);
   pinMode(E, OUTPUT);
+  pinMode(push_EMG,INPUT);
+  pinMode(push_SHP,INPUT);
 
   digitalWrite(CLK, LOW);
   digitalWrite(RS, LOW); // LCD in command mode default
@@ -69,15 +71,15 @@ void sendData()
 {
   String data = "@@05|";
   data += String(EMG);
-  data += String(SHP);
+  data += String(0);
   data+="0";
   data+=String(smoke);//smoke
   data+="0"; //garbage ir
-  data+=String(ir_st); //ir room 1
+  data+=String(!ir_st); //ir room 1
   data+="0"; //ir room 2'
   data+=String(smart_light);//ldr
   data += "|";
-  data += String(Lm);
+  data += String(abs(Lm));
   data += "&";
   Wire.write(data.c_str());
 }
@@ -264,14 +266,7 @@ void loop() {
   else{
     smart_light=0;
   }
-  
-  Serial.println("Temp " + String(abs(Lm)));                                                                                                            
-  Serial.println("ldr " + String(ldr));
-  Serial.println("Smoke " + String(smoke_sensor));
-  Serial.println("ir " + String(ir));
-  Serial.println("SHP:" + String(SHP));
-  Serial.println("EMG:" + String(EMG));
-  delay(100);
+ 
   
   
 }

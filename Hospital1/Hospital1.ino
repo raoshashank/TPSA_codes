@@ -38,9 +38,9 @@ void receiveData() {
 void sendData()
 {
   data="@@08|";
-  data += String(EMG);
-  data += String(SHP);
-  data += String(GBG);
+  data += String(0);
+  data += String(0);
+  data += String(0);
   //data += String("0");
   data+="0";//LCD ??
   data+=String(smoke);
@@ -165,15 +165,11 @@ void loop()
   }
   
 
-  Serial.println("LDR conv = " + String(LDR_Conv));
-  Serial.println("LDR Wall = " + String(LDR_Wall));
-  Serial.println("IR = " + String(Ir));
-  Serial.println("LM35 = " + String(Lm));
-  Serial.println("SHP=" + String(SHP));
-  Serial.println("EMG=" + String(EMG));
+//  Serial.println("LDR conv = " + String(conv_st));
+  
   Serial.println("---------------------------");
   
-  delay(100);
+  delay(1000);
 
 }
 /*_____________________________*/

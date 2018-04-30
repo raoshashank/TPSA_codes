@@ -9,7 +9,9 @@ const int baud_rate=9600;
 
 #define Line1 0x80  // location LCD row 0 col 0 or line 1 LCD
 #define Line2 0x80 + 0x40  // location row 1 col 0 or line 2 LCD
-
+int bot_detect;
+int angle=120;
+int gbg_count=0;
 const int trigPin = 6;
 const int echoPin = A3;
 const int grnd = 12;
@@ -18,10 +20,13 @@ const int LM35 = A1;
 const int LDR = A2;
 int fan_enable = 9;
 int fan_input = 10;
+const int servo_gbg=9;
+const int ir_gbg=2;
 
 long duration;
 int distance;
 Servo myservo;
+Servo bin;
 int servo = 11 ;
 int pos = 0;
 
@@ -38,6 +43,7 @@ int temp_max = 31;
 int smoke_max = 300;
 int burg = 300;
 int EMG, Lm,smoke,ldr_st;
+int ldr_val;
 
 String data= "";
 int gc = 0;
@@ -57,12 +63,15 @@ void setup() {
   pinMode(Bit_out, OUTPUT);
   pinMode(CLK, OUTPUT);
   pinMode(RS, OUTPUT);
+  pinMode(LDR,INPUT);
   pinMode(E, OUTPUT);
   pinMode(buzzer, OUTPUT);
   digitalWrite(CLK, LOW);
   digitalWrite(RS, LOW); // LCD in command mode default
   digitalWrite(E, HIGH);
-
+  bin.attach(servo_gbg); //3 is the pwm pin for servo actuation
+  pinMode(ir_gbg,INPUT);
+  
   Wire.begin(SLAVE_ADDRESS);
   // define callbacks for i2c communication
   Wire.onRequest(sendData);
@@ -168,13 +177,14 @@ void ClearDisplay(void)   {
 void sendData()
 {
   String data = "@@05|";
-  data += String(EMG);
+  data += String(0);
   data += "0";
   data += "0";
   data += "0";
   /*------data to send------*/
   data += String(smoke);
-  data+="000";
+  data+="00";
+  data+=String(
   data += String("|");
   data += String(Lm);
   data += String("&");
@@ -202,6 +212,8 @@ void loop() {
  typeln(String1,Line1);
 int index = sizeof(String1);
 int count;
+bot_detect=digitalRead(ir_gbg);
+
 for (count =0;count<index;count++)
 {
   writeCommand(0x18);
@@ -271,13 +283,42 @@ delay(500);
     digitalWrite(buzzer , LOW);
      //delay(10000);
   }
+ 
+ if(bot_detect==0 && gbg_count==0)
+    {
+      gbg_count=1;
+        //Serial.println("Bot detected. Actuating garbage loader.");
+        for(int i=0;i<angle;i++)
+        {
+          bin.write(i);
+          delay(15);
+        }
+        //delay(2000);
+        for(int i=0;i<angle;i++)
+        {
+          bin.write(angle-i);
+          delay(15);
+        }
+    }
+    else if(bot_detect==1)
+    {
+      gbg_count=0;
+    }
+
+
+  
   
   /*___LDR CODE________*/
 
-    int  ldr_value = analogRead(LDR);
+int  ldr_value = analogRead(LDR);
+//
+//if(ldr_value>100)
+//  
 //typeInt(ldr_value,Line2);
 delay(500);
 //Serial.println(ldr_value);
+Serial.println("IR GBG"+String(ir_gbg));
+//Serial.println("LDR"+String(ldr_value));
 }
 
 int ultra_distance()
